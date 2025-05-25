@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 urlpatterns = [
+    path('', lambda request: redirect('/base/')),  # Redirection racine → /base/
     path('base/', include('base.urls')),
     path('raisonnement/', include('raisonnement.urls')),
     path('nlp/', include('nlp.urls')),
