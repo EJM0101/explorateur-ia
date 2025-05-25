@@ -1,21 +1,37 @@
+import re
 from django.shortcuts import render
 
 def syllogisme(p1, p2):
-    # Cas simple : Tous les X sont Y ; Z est un X → Z est un Y
+    """
+    Analyse deux phrases simples pour faire une inférence logique :
+    - P1 : Tous les X sont Y
+    - P2 : Z est un X
+    Retourne : Z est Y
+    """
     try:
-        tous, x1, sont, y1 = p1.lower().split()
-        z, est, un, x2 = p2.lower().split()
+        # Exemple : "Tous les chats sont mignons"
+        m1 = re.match(r"tous les (\w+) sont (\w+)", p1.lower())
+        m2 = re.match(r"(\w+) est un (\w+)", p2.lower())
 
-        if x1 == x2 and tous == "tous" and sont == "sont" and est == "est":
-            return f"{z.capitalize()} est {y1}"
+        if m1 and m2:
+            x1, y = m1.groups()
+            z, x2 = m2.groups()
+
+            if x1 == x2:
+                return f"{z.capitalize()} est {y}"
+            else:
+                return f"Les termes ne correspondent pas : '{x1}' ≠ '{x2}'. Pas d'inférence possible."
         else:
-            return "Conclusion non déductible automatiquement."
-    except:
-        return "Syllogisme mal formulé."
+            return (
+                "Structure non reconnue. Veuillez utiliser des phrases comme :\n"
+                "« Tous les chats sont mignons » et « Garfield est un chat »"
+            )
+    except Exception as e:
+        return f"Syllogisme mal formulé. Erreur : {str(e)}"
 
 def index(request):
-    p1 = request.GET.get('p1', "Tous les hommes sont mortels")
-    p2 = request.GET.get('p2', "Socrate est un homme")
+    p1 = request.GET.get('p1', "Tous les chats sont mignons")
+    p2 = request.GET.get('p2', "Garfield est un chat")
     conclusion = syllogisme(p1, p2)
 
     return render(request, 'raisonnement/index.html', {
