@@ -10,24 +10,28 @@ def index(request):
 
 @csrf_exempt
 def detect(request):
-    if request.method == 'POST':
-        image = request.FILES.get('image')
-        if not image:
-            return JsonResponse({'objets': ["[Erreur] Aucune image reçue."]})
-        
+    if request.method == 'POST' and request.FILES.get('image'):
+        image_file = request.FILES['image']
+
         try:
+            # Lire le fichier en binaire brut
+            binary_data = image_file.read()
+
             response = requests.post(
                 "https://api-inference.huggingface.co/models/facebook/detr-resnet-50",
                 headers={
                     "Authorization": f"Bearer {os.getenv('HF_API_KEY')}",
+                    "Content-Type": "image/jpeg"  # ou image/png selon le cas
                 },
-                files={"file": image}
+                data=binary_data
             )
             raw = response.text
             data = response.json()
+
             objets = [r['label'] for r in data if 'label' in r]
             return JsonResponse({'objets': objets, 'debug': raw})
+
         except Exception as e:
-            return JsonResponse({'objets': [f"[Erreur API Hugging Face : {str(e)}]"]})
-    
-    return JsonResponse({'objets': ["Méthode invalide."]})
+            return JsonResponse({'objets': [f"[Erreur : {str(e)}]"]})
+
+    return JsonResponse({'objets': ["Aucune image reçue."]})
