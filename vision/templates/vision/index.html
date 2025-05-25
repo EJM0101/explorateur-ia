@@ -65,16 +65,21 @@
         method: 'POST',
         body: form
       })
-      .then(res => res.json())
-      .then(data => {
-        const ul = document.getElementById('resultat');
-        ul.innerHTML = "";
-        data.objets.forEach(obj => {
-          const li = document.createElement('li');
-          li.textContent = obj;
-          ul.appendChild(li);
-        });
-      });
+.then(res => res.json())
+.then(data => {
+  const ul = document.getElementById('resultat');
+  ul.innerHTML = "";
+  data.objets.forEach(obj => {
+    const li = document.createElement('li');
+    li.textContent = obj;
+    ul.appendChild(li);
+  });
+  if (data.debug) {
+    const debug = document.createElement('li');
+    debug.textContent = "[DEBUG] " + data.debug;
+    ul.appendChild(debug);
+  }
+});
     }
   </script>
 </body>
