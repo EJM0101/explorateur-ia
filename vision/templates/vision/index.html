@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Vision IA - Détection d’objets</title>
+  <style>
+    body {
+      background: #eef2f7;
+      padding: 2rem;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1e88e5;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 1rem auto;
+    }
+    button {
+      background: #1e88e5;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: block;
+      margin: auto;
+    }
+    ul {
+      margin-top: 2rem;
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Détection d’objets par l’IA</h1>
+    <p>Envoyez une image. L’IA détectera les objets visibles.</p>
+
+    <input type="file" id="image">
+    <button onclick="detect()">Analyser</button>
+
+    <ul id="resultat"></ul>
+  </div>
+
+  <script>
+    function detect() {
+      const file = document.getElementById('image').files[0];
+      if (!file) return alert("Sélectionnez une image.");
+      const form = new FormData();
+      form.append('image', file);
+
+      fetch('/vision/detect/', {
+        method: 'POST',
+        body: form
+      })
+      .then(res => res.json())
+      .then(data => {
+        const ul = document.getElementById('resultat');
+        ul.innerHTML = "";
+        data.objets.forEach(obj => {
+          const li = document.createElement('li');
+          li.textContent = obj;
+          ul.appendChild(li);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Représentation des connaissances - IA</title>
+  <style>
+    body {
+      background: #f0f2f5;
+      padding: 2rem;
+      color: #333;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1e88e5;
+      text-align: center;
+    }
+    h2 {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      color: #444;
+    }
+    ul {
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    li {
+      margin-bottom: 0.5rem;
+    }
+    .note {
+      font-style: italic;
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Représentation des connaissances</h1>
+    <p class="note">
+      Ce module démontre comment les IA représentent des faits et des règles logiques simples pour en déduire de nouvelles vérités.
+    </p>
+
+    <h2>Faits déclarés :</h2>
+    <ul>
+      {% for fait in faits %}
+        <li>{{ fait }}</li>
+      {% endfor %}
+    </ul>
+
+    <h2>Règles utilisées :</h2>
+    <ul>
+      {% for r in regles %}
+        <li>{{ r }}</li>
+      {% endfor %}
+    </ul>
+
+    <h2>Inférences produites :</h2>
+    <ul>
+      {% for f in inférences %}
+        <li>{{ f }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</body>
+</html>

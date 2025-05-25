@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>IA de planification</title>
+  <style>
+    body {
+      background: #eef2f7;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    select, button {
+      padding: 0.6rem;
+      margin: 0.5rem;
+      border-radius: 6px;
+    }
+    button {
+      background: #1e88e5;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 1.5rem;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Planification IA</h1>
+    <p>Ce module montre comment une IA peut planifier une séquence d’actions pour atteindre un objectif.</p>
+
+    <label>Départ :</label>
+    <select id="depart">
+      {% for n in noeuds %}
+        <option>{{ n }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Objectif :</label>
+    <select id="objectif">
+      {% for n in noeuds %}
+        <option>{{ n }}</option>
+      {% endfor %}
+    </select>
+
+    <button onclick="planifier()">Planifier</button>
+
+    <div class="result" id="chemin"></div>
+  </div>
+
+  <script>
+    function planifier() {
+      const form = new FormData();
+      form.append('depart', document.getElementById('depart').value);
+      form.append('objectif', document.getElementById('objectif').value);
+
+      fetch('/planning/calculer/', {
+        method: 'POST',
+        body: form
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('chemin').innerText = "Chemin trouvé : " + data.chemin;
+      });
+    }
+  </script>
+</body>
+</html>

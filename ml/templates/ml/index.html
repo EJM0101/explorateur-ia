@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Apprentissage automatique (ML)</title>
+  <style>
+    body {
+      background: #f2f4f8;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1e88e5;
+    }
+    input {
+      padding: 0.6rem;
+      width: 40%;
+      margin-right: 0.5rem;
+    }
+    button {
+      padding: 0.6rem 1rem;
+      background: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Démo : classification par IA</h1>
+    <p>Ce mini modèle de machine learning prédit la **classe** d’un point (x, y).</p>
+    <p>Exemples : (1,1) → classe 0 / (5,5) → classe 1</p>
+
+    <input type="number" id="x" step="0.1" placeholder="x">
+    <input type="number" id="y" step="0.1" placeholder="y">
+    <button onclick="predict()">Prédire</button>
+
+    <div class="result" id="output"></div>
+  </div>
+
+  <script>
+    function predict() {
+      const x = document.getElementById('x').value;
+      const y = document.getElementById('y').value;
+      const form = new FormData();
+      form.append('x', x);
+      form.append('y', y);
+
+      fetch('/ml/predict/', {
+        method: 'POST',
+        body: form
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('output').innerText = data.classe;
+      });
+    }
+  </script>
+</body>
+</html>

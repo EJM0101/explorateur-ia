@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Explorateur IA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f0f4f8;
+    }
+    h1 {
+      text-align: center;
+      color: #1e88e5;
+    }
+    p {
+      max-width: 700px;
+      margin: 1rem auto;
+      text-align: center;
+      color: #444;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      text-decoration: none;
+      color: #222;
+    }
+    .card:hover {
+      background: #e3f2fd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Explorateur de l'Intelligence Artificielle</h1>
+  <p>
+    Cette application vous permet de découvrir les différents sous-domaines de l'IA à travers des mini-démonstrations interactives.
+    Cliquez sur un domaine pour explorer ses concepts de manière intuitive.
+  </p>
+
+  <div class="grid">
+    {% for nom, lien in domaines %}
+    <a href="/{{ lien }}/" class="card">
+      <h3>{{ nom }}</h3>
+      <p>Voir la démo</p>
+    </a>
+    {% endfor %}
+  </div>
+</body>
+</html>

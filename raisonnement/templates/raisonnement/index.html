@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Raisonnement Logique - IA</title>
+  <style>
+    body {
+      background: #eef2f7;
+      padding: 2rem;
+      color: #333;
+    }
+    .container {
+      max-width: 650px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2e7d32;
+    }
+    form {
+      margin-top: 2rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.7rem;
+      margin: 0.5rem 0 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    button {
+      background: #2e7d32;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result {
+      background: #f0f0f0;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Raisonnement logique (syllogisme)</h1>
+    <p>
+      Ce module montre comment l'IA peut effectuer des raisonnements logiques simples à partir de deux propositions.
+    </p>
+
+    <form method="get">
+      <label>Proposition 1 :</label>
+      <input type="text" name="p1" value="{{ p1 }}">
+
+      <label>Proposition 2 :</label>
+      <input type="text" name="p2" value="{{ p2 }}">
+
+      <button type="submit">Déduire</button>
+    </form>
+
+    <div class="result">
+      <strong>Conclusion :</strong>
+      <p>{{ conclusion }}</p>
+    </div>
+  </div>
+</body>
+</html>

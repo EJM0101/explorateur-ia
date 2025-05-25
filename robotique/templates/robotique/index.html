@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Robotique IA - Simulation</title>
+  <style>
+    body {
+      background: #eef2f7;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; color: #1e88e5; }
+    select {
+      padding: 0.6rem;
+      margin: 0.5rem;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      background: #43a047;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    ul { background: #f9f9f9; padding: 1rem; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simulation d’un robot IA</h1>
+    <p>Ce robot virtuel peut <strong>avancer</strong>, <strong>tourner</strong> ou <strong>ramasser</strong> des objets selon vos instructions.</p>
+
+    <label>Ajouter une action :</label>
+    <select id="action">
+      <option value="AVANCER">AVANCER</option>
+      <option value="TOURNER_GAUCHE">TOURNER À GAUCHE</option>
+      <option value="TOURNER_DROITE">TOURNER À DROITE</option>
+      <option value="RAMASSER">RAMASSER</option>
+    </select>
+    <button onclick="ajouter()">Ajouter</button>
+
+    <ul id="listeActions"></ul>
+    <button onclick="executer()">Exécuter le plan</button>
+
+    <div id="resultat" style="margin-top: 1rem;"></div>
+  </div>
+
+  <script>
+    const actions = [];
+
+    function ajouter() {
+      const act = document.getElementById('action').value;
+      actions.push(act);
+      const li = document.createElement('li');
+      li.textContent = act;
+      document.getElementById('listeActions').appendChild(li);
+    }
+
+    function executer() {
+      const form = new FormData();
+      actions.forEach(a => form.append('actions[]', a));
+
+      fetch('/robotique/executer/', {
+        method: 'POST',
+        body: form
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('resultat').innerHTML = `
+          <strong>Position finale :</strong> ${data.position} <br>
+          <strong>Orientation :</strong> ${data.orientation} <br>
+          <strong>Journal :</strong>
+          <ul>${data.log.map(l => `<li>${l}</li>`).join('')}</ul>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
