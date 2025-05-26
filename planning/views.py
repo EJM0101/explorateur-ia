@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 import heapq
 from collections import deque, defaultdict
 
-# A* et Dijkstra (même base, heuristique = 0 pour Dijkstra)
+# A* et Dijkstra
 def a_star(graph, start, goal, heuristic=None):
     if heuristic is None:
         heuristic = lambda x, y: 0
@@ -25,7 +25,7 @@ def a_star(graph, start, goal, heuristic=None):
                 heapq.heappush(open_set, (est, cost + weight, neighbor, path))
     return []
 
-# BFS pour graphes non pondérés
+# BFS (non pondéré)
 def bfs(graph, start, goal):
     queue = deque([[start]])
     visited = set()
@@ -42,7 +42,7 @@ def bfs(graph, start, goal):
                 queue.append(path + [neighbor])
     return []
 
-# Heuristique simplifiée pour A* (nombre de lettres différentes)
+# Heuristique A* simple (distance de nom)
 def lettre_distance(a, b):
     return abs(len(a) - len(b))
 
@@ -53,6 +53,7 @@ def index(request):
     noeuds = []
     edges_input = ""
     start, end = "", ""
+    invalides = []
 
     if request.method == 'POST':
         algo = request.POST.get('algo')
@@ -66,10 +67,17 @@ def index(request):
         for line in edges_input.strip().splitlines():
             parts = line.strip().split()
             if len(parts) >= 3:
-                a, b, w = parts[0], parts[1], float(parts[2])
-                graph[a].append((b, w))
-                graph[b].append((a, w))  # graphe non dirigé
-                noeuds_set.update([a, b])
+                try:
+                    a = parts[0].strip()
+                    b = parts[1].strip()
+                    w = float(parts[2].strip())
+                    graph[a].append((b, w))
+                    graph[b].append((a, w))
+                    noeuds_set.update([a, b])
+                except ValueError:
+                    invalides.append(line)
+            else:
+                invalides.append(line)
 
         noeuds = sorted(list(noeuds_set))
 
@@ -86,5 +94,6 @@ def index(request):
         'edges': edges_input,
         'start': start,
         'end': end,
-        'noeuds': noeuds
+        'noeuds': noeuds,
+        'invalides': invalides
     })
