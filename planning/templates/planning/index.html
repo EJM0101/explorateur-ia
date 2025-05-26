@@ -24,6 +24,15 @@
       padding: 0.6rem;
       margin-top: 0.8rem;
       font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
     }
     #network {
       height: 450px;
@@ -63,6 +72,18 @@
       <button type="submit">Calculer le chemin</button>
     </form>
 
+    {% if invalides %}
+    <div style="margin-top:1.5rem; padding:1rem; background:#ffecec; border-left:4px solid red; border-radius:6px;">
+      <strong>Lignes ignorées (format invalide) :</strong>
+      <ul>
+        {% for ligne in invalides %}
+          <li>{{ ligne }}</li>
+        {% endfor %}
+      </ul>
+      <p style="margin-top:0.5rem;">Format attendu : <code>A B 3</code> (nœud1, nœud2, poids)</p>
+    </div>
+    {% endif %}
+
     {% if chemin %}
     <div class="box">
       <h3>Chemin trouvé :</h3>
@@ -98,7 +119,7 @@
         return base;
       });
 
-      // Dessin du chemin optimal en surbrillance
+      // Ajoute les arêtes rouges pour le chemin optimal
       for (let i = 0; i < chemin.length - 1; i++) {
         const src = chemin[i];
         const dst = chemin[i + 1];
