@@ -1,8 +1,8 @@
 import os
 import requests
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
 
 @csrf_exempt
 def index(request):
@@ -12,26 +12,30 @@ def index(request):
 def detect(request):
     if request.method == 'POST' and request.FILES.get('image'):
         image_file = request.FILES['image']
+        binary_data = image_file.read()
 
         try:
-            # Lire le fichier en binaire brut
-            binary_data = image_file.read()
-
             response = requests.post(
                 "https://api-inference.huggingface.co/models/facebook/detr-resnet-50",
                 headers={
                     "Authorization": f"Bearer {os.getenv('HF_API_KEY')}",
-                    "Content-Type": "image/jpeg"  # ou image/png selon le cas
+                    "Content-Type": "image/jpeg"
                 },
                 data=binary_data
             )
-            raw = response.text
             data = response.json()
-
-            objets = [r['label'] for r in data if 'label' in r]
-            return JsonResponse({'objets': objets, 'debug': raw})
-
+            objets = []
+            for r in data:
+                if 'label' in r and 'box' in r:
+                    objets.append({
+                        "label": r['label'],
+                        "xmin": r['box']['xmin'],
+                        "ymin": r['box']['ymin'],
+                        "xmax": r['box']['xmax'],
+                        "ymax": r['box']['ymax'],
+                    })
+            return JsonResponse({'objets': objets})
         except Exception as e:
-            return JsonResponse({'objets': [f"[Erreur : {str(e)}]"]})
+            return JsonResponse({'objets': [], 'error': str(e)})
 
-    return JsonResponse({'objets': ["Aucune image reçue."]})
+    return JsonResponse({'objets': [], 'error': 'Aucune image reçue'})
