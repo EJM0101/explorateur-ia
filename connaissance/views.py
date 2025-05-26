@@ -1,62 +1,60 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-# Faits enrichis par défaut
-FAITS_BASE = [
-    "homme(socrate)",
-    "homme(platon)",
-    "femme(alice)",
-    "chat(tom)",
-    "animal(chat)",
-    "animal(chien)",
-    "animal(lion)",
-    "humain(X) => mortel(X)",
-    "homme(X) => humain(X)",
-    "femme(X) => humain(X)",
-]
+# Inférence logique simple : "si A alors B"
+def appliquer_regles(faits, regles):
+    faits = set(faits)
+    nouvelles_inf = set()
+    trace = []
+
+    changed = True
+    while changed:
+        changed = False
+        for r in regles:
+            condition, conclusion = [s.strip() for s in r.lower().split("alors")]
+            if condition in faits and conclusion not in faits:
+                faits.add(conclusion)
+                nouvelles_inf.add(conclusion)
+                trace.append(f"{condition} → {conclusion}")
+                changed = True
+    return faits, trace
 
 @csrf_exempt
 def index(request):
-    faits_utilisateur = []
-    regles_utilisateur = []
-
-    # Récupération via POST
     if request.method == 'POST':
-        new_faits = request.POST.get('faits', '')
-        new_regles = request.POST.get('regles', '')
-        faits_utilisateur = [l.strip() for l in new_faits.split('\n') if l.strip()]
-        regles_utilisateur = [l.strip() for l in new_regles.split('\n') if l.strip()]
+        faits_brut = request.POST.get('faits', '')
+        regles_brut = request.POST.get('regles', '')
 
-    # Fusion
-    faits = list(FAITS_BASE) + faits_utilisateur
-    regles = [r for r in faits if '=>' in r] + regles_utilisateur
-    faits_atomiques = [f for f in faits if '=>' not in f]
+        faits_initiaux = [f.strip().lower() for f in faits_brut.strip().splitlines() if f.strip()]
+        regles = [r.strip().lower() for r in regles_brut.strip().splitlines() if "alors" in r.lower()]
 
-    inférences = infere(faits_atomiques, regles)
+        faits_final, trace = appliquer_regles(faits_initiaux, regles)
+
+        # Préparer le graphe (liens pour vis.js)
+        liens = []
+        for ligne in trace:
+            condition, conclusion = ligne.split("→")
+            liens.append({
+                "from": condition.strip(),
+                "to": conclusion.strip()
+            })
+
+        return render(request, 'connaissance/index.html', {
+            'faits_initiaux': faits_initiaux,
+            'faits_final': sorted(faits_final),
+            'regles': regles,
+            'trace': trace,
+            'liens': liens,
+        })
+
+    # Par défaut : exemple simple
+    exemples_faits = "oiseau\nmange"
+    exemples_regles = "oiseau alors animal\nanimal alors vivant\nmange alors actif"
 
     return render(request, 'connaissance/index.html', {
-        'faits': faits_atomiques,
-        'regles': regles,
-        'inférences': sorted(set(inférences))
+        'faits_initiaux': exemples_faits.splitlines(),
+        'faits_final': [],
+        'regles': exemples_regles.splitlines(),
+        'trace': [],
+        'liens': [],
     })
-
-# Moteur d'inférence basique (remplace X par valeurs existantes)
-def infere(faits, regles):
-    résultats = set(faits)
-    for regle in regles:
-        if "=>" not in regle:
-            continue
-        premise, conclusion = regle.split("=>")
-        premise = premise.strip()
-        conclusion = conclusion.strip()
-
-        # Cas : prédicat(X) => autre(X)
-        if "(X)" in premise and "(X)" in conclusion:
-            pred = premise.replace("(X)", "")
-            concl = conclusion.replace("(X)", "")
-            for fait in faits:
-                if fait.startswith(f"{pred}(") and fait.endswith(")"):
-                    valeur = fait[len(pred)+1:-1]
-                    résultats.add(f"{concl}({valeur})")
-
-    return résultats
