@@ -2,75 +2,157 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>IA de planification</title>
+  <title>Planification IA visuelle</title>
+  <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/dist/vis-network.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/styles/vis-network.min.css" rel="stylesheet" />
   <style>
     body {
-      background: #eef2f7;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
       padding: 2rem;
     }
     .container {
-      max-width: 600px;
+      max-width: 900px;
       margin: auto;
       background: white;
       padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    select, button {
-      padding: 0.6rem;
-      margin: 0.5rem;
+    #graph {
+      height: 400px;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
       border-radius: 6px;
     }
+    select, input {
+      padding: 0.6rem;
+      margin-right: 0.5rem;
+    }
     button {
+      padding: 0.6rem 1.2rem;
       background: #1e88e5;
       color: white;
       border: none;
+      border-radius: 6px;
       cursor: pointer;
+      margin-top: 0.5rem;
     }
     .result {
-      margin-top: 1.5rem;
+      margin-top: 1rem;
       font-weight: bold;
-      color: #2e7d32;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Planification IA</h1>
-    <p>Ce module montre comment une IA peut planifier une séquence d’actions pour atteindre un objectif.</p>
+    <h1>Planification IA (Graphe personnalisé)</h1>
+    <p>Ajoutez vos nœuds et connexions. Sélectionnez un départ et un objectif. L’IA planifiera le chemin.</p>
 
-    <label>Départ :</label>
-    <select id="depart">
-      {% for n in noeuds %}
-        <option>{{ n }}</option>
-      {% endfor %}
-    </select>
+    <div id="graph"></div>
 
-    <label>Objectif :</label>
-    <select id="objectif">
-      {% for n in noeuds %}
-        <option>{{ n }}</option>
-      {% endfor %}
-    </select>
+    <div>
+      <input id="nodeName" placeholder="Nom du nœud (ex: A)">
+      <button onclick="addNode()">Ajouter nœud</button>
+    </div>
 
-    <button onclick="planifier()">Planifier</button>
+    <div style="margin-top:1rem;">
+      <input id="fromNode" placeholder="De (ex: A)">
+      <input id="toNode" placeholder="À (ex: B)">
+      <button onclick="addEdge()">Relier</button>
+    </div>
 
-    <div class="result" id="chemin"></div>
+    <div style="margin-top:1rem;">
+      <select id="startNode"></select>
+      <select id="endNode"></select>
+      <button onclick="calculate()">Planifier</button>
+    </div>
+
+    <div class="result" id="resultat"></div>
   </div>
 
   <script>
-    function planifier() {
-      const form = new FormData();
-      form.append('depart', document.getElementById('depart').value);
-      form.append('objectif', document.getElementById('objectif').value);
+    let nodes = new vis.DataSet([]);
+    let edges = new vis.DataSet([]);
+    let container = document.getElementById("graph");
+    let data = { nodes, edges };
+    let options = { 
+      nodes: { shape: 'dot', size: 16, font: { size: 18 } },
+      edges: { arrows: 'to' }
+    };
+    let network = new vis.Network(container, data, options);
+
+    let graphe = {};
+
+    function updateSelects() {
+      const allNodes = nodes.get().map(n => n.id);
+      const selects = [document.getElementById("startNode"), document.getElementById("endNode")];
+      selects.forEach(sel => {
+        sel.innerHTML = "";
+        allNodes.forEach(n => {
+          const opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = n;
+          sel.appendChild(opt);
+        });
+      });
+    }
+
+    function addNode() {
+      const nom = document.getElementById("nodeName").value;
+      if (!nom || nodes.get(nom)) return;
+      nodes.add({ id: nom, label: nom });
+      graphe[nom] = [];
+      updateSelects();
+    }
+
+    function addEdge() {
+      const from = document.getElementById("fromNode").value;
+      const to = document.getElementById("toNode").value;
+      if (from && to) {
+        const edgeId = from + "_" + to;
+        edges.add({
+          id: edgeId,
+          from,
+          to,
+          color: { color: '#848484' }
+        });
+        if (!graphe[from]) graphe[from] = [];
+        graphe[from].push(to);
+      }
+    }
+
+    function calculate() {
+      const start = document.getElementById("startNode").value;
+      const end = document.getElementById("endNode").value;
 
       fetch('/planning/calculer/', {
         method: 'POST',
-        body: form
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ graphe, depart: start, objectif: end })
       })
       .then(res => res.json())
       .then(data => {
-        document.getElementById('chemin').innerText = "Chemin trouvé : " + data.chemin;
+        const chemin = data.chemin;
+        document.getElementById("resultat").innerText = "Chemin : " + chemin;
+
+        // Réinitialise les couleurs
+        edges.forEach(edge => {
+          edges.update({ id: edge.id, color: { color: '#848484' } });
+        });
+
+        // Colorer le chemin trouvé
+        if (chemin.includes("→")) {
+          const étapes = chemin.split(" → ");
+          for (let i = 0; i < étapes.length - 1; i++) {
+            const from = étapes[i];
+            const to = étapes[i + 1];
+            const edge = edges.get({ filter: e => e.id === from + "_" + to })[0];
+            if (edge) {
+              edges.update({ id: edge.id, color: { color: 'red' } });
+            }
+          }
+        }
       });
     }
   </script>
