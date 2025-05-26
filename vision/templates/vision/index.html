@@ -10,24 +10,21 @@
       padding: 2rem;
     }
     .container {
-      max-width: 800px;
+      max-width: 850px;
       margin: auto;
       background: white;
       padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    h1 {
-      text-align: center;
-      color: #1e88e5;
-    }
+    h1 { text-align: center; color: #1e88e5; }
     canvas {
       margin-top: 1rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       max-width: 100%;
     }
-    input, button {
+    input {
       margin-top: 1rem;
       padding: 0.6rem;
     }
@@ -35,8 +32,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>Détection d’objets par IA</h1>
-    <p>Sélectionnez une image. L’IA détectera les objets et les affichera avec un encadré vert.</p>
+    <h1>Détection d’objets et visages par IA</h1>
+    <p>Sélectionnez une image. Les objets et visages seront annotés avec traduction en français.</p>
 
     <input type="file" id="fileInput" accept="image/*">
     <canvas id="canvas"></canvas>
@@ -47,6 +44,31 @@
     const ctx = canvas.getContext('2d');
     const fileInput = document.getElementById('fileInput');
 
+    const traductions = {
+      "person": "personne", "car": "voiture", "cell phone": "téléphone",
+      "dog": "chien", "cat": "chat", "bottle": "bouteille", "cup": "tasse",
+      "book": "livre", "tv": "télévision", "laptop": "ordinateur", "chair": "chaise",
+      "backpack": "sac à dos", "handbag": "sac à main", "suitcase": "valise",
+      "umbrella": "parapluie", "bicycle": "vélo", "motorcycle": "moto",
+      "bus": "bus", "truck": "camion", "traffic light": "feu tricolore",
+      "stop sign": "panneau stop", "keyboard": "clavier", "mouse": "souris",
+      "remote": "télécommande", "sink": "évier", "bed": "lit", "toilet": "toilettes",
+      "microwave": "micro-onde", "oven": "four", "refrigerator": "frigo",
+      "sandwich": "sandwich", "pizza": "pizza", "cake": "gâteau",
+      "banana": "banane", "apple": "pomme", "orange": "orange", "broccoli": "brocoli",
+      "carrot": "carotte", "hot dog": "hot dog", "donut": "beignet",
+      "tv monitor": "écran", "sink": "évier", "clock": "horloge", "vase": "vase",
+      "scissors": "ciseaux", "toothbrush": "brosse à dents", "hair drier": "sèche-cheveux",
+      "visage": "visage"
+      // ... (ajoute jusqu'à 100 si besoin)
+    };
+
+    const couleurs = {
+      "personne": "#0099ff", "voiture": "#ff9933", "téléphone": "#66cc66",
+      "chien": "#9966ff", "chat": "#ff6666", "visage": "#00cc99"
+      // autres couleurs pour différents objets
+    };
+
     fileInput.addEventListener('change', () => {
       const file = fileInput.files[0];
       if (!file) return;
@@ -54,7 +76,7 @@
       const formData = new FormData();
       formData.append('image', file);
 
-      // Charger l’image
+      // Charger l’image localement
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
@@ -67,7 +89,7 @@
       };
       reader.readAsDataURL(file);
 
-      // Appel API
+      // API de détection
       fetch('/vision/detect/', {
         method: 'POST',
         body: formData
@@ -75,21 +97,20 @@
       .then(res => res.json())
       .then(data => {
         setTimeout(() => {
-          if (data.objets && data.objets.length > 0) {
-            ctx.lineWidth = 2;
-            ctx.font = '16px Arial';
-            ctx.fillStyle = 'green';
-            ctx.strokeStyle = 'green';
+          ctx.font = '16px Arial';
+          ctx.lineWidth = 2;
 
-            data.objets.forEach(obj => {
-              const { xmin, ymin, xmax, ymax, label } = obj;
-              ctx.strokeRect(xmin, ymin, xmax - xmin, ymax - ymin);
-              ctx.fillText(label, xmin + 4, ymin - 6);
-            });
-          } else {
-            alert("Aucun objet détecté ou erreur : " + (data.error || ''));
-          }
-        }, 1000); // attendre que l’image s’affiche
+          (data.objets || []).forEach(obj => {
+            const { xmin, ymin, xmax, ymax, label } = obj;
+            const nomFr = traductions[label] || label;
+            const color = couleurs[nomFr] || "#33cc33";
+
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.strokeRect(xmin, ymin, xmax - xmin, ymax - ymin);
+            ctx.fillText(nomFr, xmin + 4, ymin - 6);
+          });
+        }, 800);
       });
     });
   </script>
