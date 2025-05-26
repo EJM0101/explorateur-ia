@@ -2,85 +2,96 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Vision IA - Détection d’objets</title>
+  <title>Détection IA - Vision</title>
   <style>
     body {
+      font-family: 'Segoe UI', sans-serif;
       background: #eef2f7;
       padding: 2rem;
-      color: #333;
     }
     .container {
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background: white;
       padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     h1 {
       text-align: center;
       color: #1e88e5;
     }
-    input[type="file"] {
-      display: block;
-      margin: 1rem auto;
-    }
-    button {
-      background: #1e88e5;
-      color: white;
-      padding: 0.6rem 1.2rem;
-      border: none;
+    canvas {
+      margin-top: 1rem;
+      border: 1px solid #ccc;
       border-radius: 6px;
-      cursor: pointer;
-      display: block;
-      margin: auto;
+      max-width: 100%;
     }
-    ul {
-      margin-top: 2rem;
-      background: #f9f9f9;
-      padding: 1rem;
-      border-radius: 6px;
+    input, button {
+      margin-top: 1rem;
+      padding: 0.6rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Détection d’objets par l’IA</h1>
-    <p>Envoyez une image. L’IA détectera les objets visibles.</p>
+    <h1>Détection d’objets par IA</h1>
+    <p>Sélectionnez une image. L’IA détectera les objets et les affichera avec un encadré vert.</p>
 
-    <input type="file" id="image">
-    <button onclick="detect()">Analyser</button>
-
-    <ul id="resultat"></ul>
+    <input type="file" id="fileInput" accept="image/*">
+    <canvas id="canvas"></canvas>
   </div>
 
   <script>
-    function detect() {
-      const file = document.getElementById('image').files[0];
-      if (!file) return alert("Sélectionnez une image.");
-      const form = new FormData();
-      form.append('image', file);
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const fileInput = document.getElementById('fileInput');
 
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Charger l’image
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // Appel API
       fetch('/vision/detect/', {
         method: 'POST',
-        body: form
+        body: formData
       })
-.then(res => res.json())
-.then(data => {
-  const ul = document.getElementById('resultat');
-  ul.innerHTML = "";
-  data.objets.forEach(obj => {
-    const li = document.createElement('li');
-    li.textContent = obj;
-    ul.appendChild(li);
-  });
-  /**if (data.debug) {
-    const debug = document.createElement('li');
-    debug.textContent = "[DEBUG] " + data.debug;
-    ul.appendChild(debug);
-  }**/
-});
-    }
+      .then(res => res.json())
+      .then(data => {
+        setTimeout(() => {
+          if (data.objets && data.objets.length > 0) {
+            ctx.lineWidth = 2;
+            ctx.font = '16px Arial';
+            ctx.fillStyle = 'green';
+            ctx.strokeStyle = 'green';
+
+            data.objets.forEach(obj => {
+              const { xmin, ymin, xmax, ymax, label } = obj;
+              ctx.strokeRect(xmin, ymin, xmax - xmin, ymax - ymin);
+              ctx.fillText(label, xmin + 4, ymin - 6);
+            });
+          } else {
+            alert("Aucun objet détecté ou erreur : " + (data.error || ''));
+          }
+        }, 1000); // attendre que l’image s’affiche
+      });
+    });
   </script>
 </body>
 </html>
