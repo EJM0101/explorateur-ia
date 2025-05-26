@@ -5,7 +5,7 @@ def analyser_syllogisme(p1, p2):
     p2 = p2.strip().lower()
 
     try:
-        # Cas 1 : "Tous les X sont Y" + "Z est un X"
+        # Cas 1 : Tous les X sont Y ; Z est un X → Z est Y
         if p1.startswith("tous les") and "sont" in p1 and "est un" in p2:
             x = p1.split("tous les")[1].split("sont")[0].strip()
             y = p1.split("sont")[1].strip()
@@ -20,7 +20,7 @@ def analyser_syllogisme(p1, p2):
                 ]
                 return conclusion, explication
 
-        # Cas 2 : "A est B" + "B est C"
+        # Cas 2 : A est B ; B est C → A est C
         if " est " in p1 and " est " in p2:
             a, b = p1.split(" est ")
             b2, c = p2.split(" est ")
@@ -33,7 +33,7 @@ def analyser_syllogisme(p1, p2):
                 ]
                 return conclusion, explication
 
-        # Cas 3 : "A implique B" + "B implique C"
+        # Cas 3 : A implique B ; B implique C → A implique C
         if " implique " in p1 and " implique " in p2:
             a, b = p1.split(" implique ")
             b2, c = p2.split(" implique ")
@@ -47,7 +47,7 @@ def analyser_syllogisme(p1, p2):
                 return conclusion, explication
 
         return "Conclusion non déductible automatiquement.", []
-    
+
     except Exception:
         return "Syllogisme mal formulé.", []
 
@@ -56,9 +56,14 @@ def index(request):
     p2 = request.GET.get('p2', "Socrate est un homme")
     conclusion, explication = analyser_syllogisme(p1, p2)
 
+    # Indique si on peut afficher un Venn
+    p1_lower = p1.lower()
+    is_venn = p1_lower.startswith("tous les") and "sont" in p1_lower and "est un" in p2.lower()
+
     return render(request, 'raisonnement/index.html', {
         'p1': p1,
         'p2': p2,
         'conclusion': conclusion,
-        'explication': explication
+        'explication': explication,
+        'is_venn': is_venn
     })
