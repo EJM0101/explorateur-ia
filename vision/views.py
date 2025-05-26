@@ -20,18 +20,17 @@ def detect(request):
             "Content-Type": "image/jpeg"
         }
 
-        # Détection d'objets (DETR)
-        obj_response = requests.post(
-            "https://api-inference.huggingface.co/models/facebook/detr-resnet-50",
-            headers=headers,
-            data=binary_data
-        )
-
+        # === 1. Détection d'objets ===
         try:
+            obj_response = requests.post(
+                "https://api-inference.huggingface.co/models/facebook/detr-resnet-50",
+                headers=headers,
+                data=binary_data
+            )
             objets = [
                 {
                     "label": o["label"],
-                    "score": o["score"],
+                    "score": o.get("score", 0),
                     "xmin": o["box"]["xmin"],
                     "ymin": o["box"]["ymin"],
                     "xmax": o["box"]["xmax"],
@@ -43,17 +42,17 @@ def detect(request):
         except Exception:
             objets = []
 
-        # Reconnaissance faciale (Ultraface)
-        face_response = requests.post(
-            "https://api-inference.huggingface.co/models/yuval-alaluf/ultraface",
-            headers=headers,
-            data=binary_data
-        )
-
+        # === 2. Détection de visages ===
         try:
+            face_response = requests.post(
+                "https://api-inference.huggingface.co/models/nashory/ultraface-onnx",
+                headers=headers,
+                data=binary_data
+            )
             faces = [
                 {
                     "label": "visage",
+                    "score": f.get("score", 0),
                     "xmin": f["box"]["xmin"],
                     "ymin": f["box"]["ymin"],
                     "xmax": f["box"]["xmax"],
@@ -65,6 +64,7 @@ def detect(request):
         except Exception:
             faces = []
 
+        # Fusion des objets et visages
         return JsonResponse({
             "objets": objets + faces
         })
