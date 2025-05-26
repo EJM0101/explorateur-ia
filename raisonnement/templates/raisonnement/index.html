@@ -73,8 +73,7 @@
       {% endif %}
     </div>
 
-    <!-- Diagramme de Venn pour cas Tous les X sont Y -->
-    {% if p1|lower.startswith:"tous les" and "sont" in p1|lower %}
+    {% if is_venn %}
     <canvas id="venn" width="400" height="250"></canvas>
     <script>
       const p1 = "{{ p1|escapejs }}";
