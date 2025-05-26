@@ -2,74 +2,171 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Apprentissage automatique (ML)</title>
+  <title>Mini-App ML Interactive</title>
   <style>
     body {
-      background: #f2f4f8;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
       padding: 2rem;
     }
     .container {
-      max-width: 600px;
+      max-width: 800px;
       margin: auto;
       background: white;
       padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    h1 {
-      text-align: center;
-      color: #1e88e5;
+    canvas {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 1rem;
     }
-    input {
-      padding: 0.6rem;
-      width: 40%;
-      margin-right: 0.5rem;
+    input, button, select {
+      margin-top: 1rem;
+      padding: 0.5rem;
     }
-    button {
-      padding: 0.6rem 1rem;
-      background: #1e88e5;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .result {
+    #output {
       margin-top: 1rem;
       font-weight: bold;
-      color: #2e7d32;
+      color: green;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Démo : classification par IA</h1>
-    <p>Ce mini modèle de machine learning prédit la **classe** d’un point (x, y).</p>
-    <p>Exemples : (1,1) → classe 0 / (5,5) → classe 1</p>
+    <h1>Classification Machine Learning – Interactif</h1>
+    <label for="modelSelect"><strong>Modèle :</strong></label>
+    <select id="modelSelect" onchange="drawAll()">
+      <option value="manuel">Manuel</option>
+      <option value="regression">Régression</option>
+    </select>
 
-    <input type="number" id="x" step="0.1" placeholder="x">
-    <input type="number" id="y" step="0.1" placeholder="y">
-    <button onclick="predict()">Prédire</button>
+    <br>
+    <input type="number" id="x" placeholder="x">
+    <input type="number" id="y" placeholder="y">
+    <button onclick="classer()">Prédire</button>
 
-    <div class="result" id="output"></div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <div id="output"></div>
   </div>
 
   <script>
-    function predict() {
-      const x = document.getElementById('x').value;
-      const y = document.getElementById('y').value;
-      const form = new FormData();
-      form.append('x', x);
-      form.append('y', y);
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const output = document.getElementById('output');
+    const modelSelect = document.getElementById('modelSelect');
 
-      fetch('/ml/predict/', {
-        method: 'POST',
-        body: form
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('output').innerText = data.classe;
-      });
+    const points = [
+      { x: 50, y: 50, label: 0 },
+      { x: 70, y: 60, label: 0 },
+      { x: 90, y: 80, label: 0 },
+      { x: 300, y: 300, label: 1 },
+      { x: 320, y: 280, label: 1 },
+      { x: 310, y: 260, label: 1 },
+    ];
+
+    let model = {
+      a: 1,
+      b: -100,
+      predict(x, y) {
+        return y > (this.a * x + this.b) ? 1 : 0;
+      },
+      getEquation() {
+        return `y = ${this.a.toFixed(2)}x + ${this.b.toFixed(2)}`;
+      },
+      computeRegression() {
+        const xs = points.map(p => p.x);
+        const ys = points.map(p => p.y);
+        const meanX = xs.reduce((a, b) => a + b, 0) / xs.length;
+        const meanY = ys.reduce((a, b) => a + b, 0) / ys.length;
+
+        let num = 0, den = 0;
+        for (let i = 0; i < xs.length; i++) {
+          num += (xs[i] - meanX) * (ys[i] - meanY);
+          den += (xs[i] - meanX) ** 2;
+        }
+        model.a = num / den;
+        model.b = meanY - model.a * meanX;
+      }
+    };
+
+    function drawAll(extraPoint = null) {
+      if (modelSelect.value === "regression") model.computeRegression();
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackgroundZones();
+
+      // Ligne de séparation
+      ctx.beginPath();
+      ctx.moveTo(0, model.b);
+      ctx.lineTo(canvas.width, model.a * canvas.width + model.b);
+      ctx.strokeStyle = 'black';
+      ctx.stroke();
+
+      for (let p of points) {
+        drawPoint(p.x, p.y, p.label === 0 ? 'blue' : 'red');
+      }
+
+      if (extraPoint) {
+        drawPoint(extraPoint.x, extraPoint.y, extraPoint.color);
+      }
+
+      updateStats();
     }
+
+    function drawBackgroundZones() {
+      const step = 5;
+      for (let x = 0; x < canvas.width; x += step) {
+        for (let y = 0; y < canvas.height; y += step) {
+          const label = model.predict(x, y);
+          ctx.fillStyle = label === 0 ? 'rgba(173, 216, 230, 0.2)' : 'rgba(255, 192, 203, 0.2)';
+          ctx.fillRect(x, y, step, step);
+        }
+      }
+    }
+
+    function drawPoint(x, y, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function updateStats() {
+      const total = points.length;
+      const nb0 = points.filter(p => p.label === 0).length;
+      const nb1 = total - nb0;
+      const eq = model.getEquation();
+      output.innerHTML = `
+        <p><strong>Équation :</strong> ${eq}</p>
+        <p><strong>Total points :</strong> ${total} (Classe 0 : ${nb0}, Classe 1 : ${nb1})</p>
+      `;
+    }
+
+    function classer() {
+      const x = parseFloat(document.getElementById('x').value);
+      const y = parseFloat(document.getElementById('y').value);
+      if (isNaN(x) || isNaN(y)) return;
+
+      if (modelSelect.value === "regression") model.computeRegression();
+      const prediction = model.predict(x, y);
+      const color = prediction === 0 ? 'blue' : 'red';
+
+      let currentY = 0;
+      const interval = setInterval(() => {
+        drawAll({ x, y: currentY, color });
+        currentY += 10;
+        if (currentY >= y) {
+          clearInterval(interval);
+          points.push({ x, y, label: prediction });
+          drawAll();
+          output.innerHTML += `<p><strong>Dernière prédiction :</strong> Classe ${prediction}</p>`;
+        }
+      }, 20);
+    }
+
+    drawAll();
   </script>
 </body>
 </html>
