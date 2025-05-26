@@ -2,71 +2,82 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Représentation des connaissances - IA</title>
+  <title>Base de connaissances IA</title>
   <style>
     body {
-      background: #f0f2f5;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f7f9;
       padding: 2rem;
-      color: #333;
     }
     .container {
-      max-width: 700px;
+      max-width: 900px;
       margin: auto;
       background: white;
       padding: 2rem;
-      border-radius: 10px;
+      border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    h1 {
-      color: #1e88e5;
-      text-align: center;
+    h1, h2 { color: #1e88e5; }
+    textarea {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 1rem;
+      padding: 0.7rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
-    h2 {
-      margin-top: 2rem;
-      font-size: 1.2rem;
-      color: #444;
+    button {
+      padding: 0.7rem 1.5rem;
+      background: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
     }
     ul {
       background: #f9f9f9;
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: 6px;
     }
     li {
-      margin-bottom: 0.5rem;
-    }
-    .note {
-      font-style: italic;
-      font-size: 0.9rem;
-      color: #666;
-      margin-bottom: 1rem;
+      margin: 0.3rem 0;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Représentation des connaissances</h1>
-    <p class="note">
-      Ce module démontre comment les IA représentent des faits et des règles logiques simples pour en déduire de nouvelles vérités.
-    </p>
+    <h1>Base de connaissances intelligente</h1>
+    <p>Ajoutez vos propres règles et faits. Le moteur d'inférence déduira les nouveaux faits automatiquement.</p>
 
-    <h2>Faits déclarés :</h2>
+    <form method="POST">
+      {% csrf_token %}
+      <h2>Vos nouveaux faits (ex : homme(john)) :</h2>
+      <textarea name="faits" placeholder="femme(claire)\nanimal(tigre)"></textarea>
+
+      <h2>Vos règles (ex : femme(X) => humain(X)) :</h2>
+      <textarea name="regles" placeholder="animal(X) => vivant(X)"></textarea>
+
+      <button type="submit">Lancer l'inférence</button>
+    </form>
+
+    <h2>Faits connus :</h2>
     <ul>
-      {% for fait in faits %}
-        <li>{{ fait }}</li>
+      {% for f in faits %}
+        <li>{{ f }}</li>
       {% endfor %}
     </ul>
 
-    <h2>Règles utilisées :</h2>
+    <h2>Règles appliquées :</h2>
     <ul>
       {% for r in regles %}
         <li>{{ r }}</li>
       {% endfor %}
     </ul>
 
-    <h2>Inférences produites :</h2>
+    <h2>Inférences déduites :</h2>
     <ul>
-      {% for f in inférences %}
-        <li>{{ f }}</li>
+      {% for i in inférences %}
+        <li>{{ i }}</li>
       {% endfor %}
     </ul>
   </div>
