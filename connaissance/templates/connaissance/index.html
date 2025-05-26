@@ -69,13 +69,12 @@
 
     {% if invalides %}
       <div class="warning">
-        <strong>Règles ignorées :</strong>
+        <strong>Règles ignorées (format invalide) :</strong>
         <ul>
           {% for r in invalides %}
             <li>{{ r }}</li>
           {% endfor %}
         </ul>
-        <p>Chaque règle doit être au format : <em>fait alors conclusion</em>.</p>
       </div>
     {% endif %}
 
@@ -88,7 +87,7 @@
         {% endfor %}
       </ul>
 
-      <h3>Inférences appliquées :</h3>
+      <h3>Inférences :</h3>
       <ul>
         {% for t in trace %}
           <li>{{ t }}</li>
@@ -109,7 +108,7 @@
         edges.push({ from: "{{ lien.from }}", to: "{{ lien.to }}" });
       {% endfor %}
 
-      const nodeList = Object.keys(nodes).map((label, i) => ({
+      const nodeList = Object.keys(nodes).map(label => ({
         id: label,
         label: label,
         color: '#cfe2ff'
@@ -119,12 +118,14 @@
         nodes: new vis.DataSet(nodeList),
         edges: new vis.DataSet(edges)
       };
+
       const options = {
         layout: { improvedLayout: true },
         nodes: { shape: 'box', font: { size: 14 } },
         edges: { arrows: 'to' },
         physics: { enabled: false }
       };
+
       new vis.Network(document.getElementById('network'), data, options);
     </script>
     {% endif %}
