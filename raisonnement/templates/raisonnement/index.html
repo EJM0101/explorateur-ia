@@ -2,72 +2,110 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Raisonnement Logique - IA</title>
+  <title>Raisonnement logique - IA</title>
   <style>
     body {
-      background: #eef2f7;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
       padding: 2rem;
-      color: #333;
     }
     .container {
-      max-width: 650px;
+      max-width: 700px;
       margin: auto;
       background: white;
-      border-radius: 10px;
       padding: 2rem;
+      border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    h1 {
-      text-align: center;
-      color: #2e7d32;
-    }
-    form {
-      margin-top: 2rem;
-    }
-    input[type="text"] {
+    input {
       width: 100%;
-      padding: 0.7rem;
-      margin: 0.5rem 0 1rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
     }
     button {
-      background: #2e7d32;
-      color: white;
       padding: 0.6rem 1.2rem;
+      background: #007bff;
+      color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
     }
-    .result {
-      background: #f0f0f0;
+    h1 { text-align: center; color: #1e88e5; }
+    .box {
+      margin-top: 1.5rem;
+      background: #f9f9f9;
       padding: 1rem;
       border-radius: 8px;
+    }
+    canvas {
       margin-top: 1.5rem;
+      border: 1px solid #ccc;
+      background: #fff;
+      display: block;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Raisonnement logique (syllogisme)</h1>
-    <p>
-      Ce module montre comment l'IA peut effectuer des raisonnements logiques simples à partir de deux propositions.
-    </p>
-
+    <h1>Déduction logique par IA</h1>
     <form method="get">
-      <label>Proposition 1 :</label>
-      <input type="text" name="p1" value="{{ p1 }}">
+      <label><strong>Premisse 1 :</strong></label>
+      <input type="text" name="p1" value="{{ p1 }}" required>
 
-      <label>Proposition 2 :</label>
-      <input type="text" name="p2" value="{{ p2 }}">
+      <label><strong>Premisse 2 :</strong></label>
+      <input type="text" name="p2" value="{{ p2 }}" required>
 
-      <button type="submit">Déduire</button>
+      <button type="submit">Analyser</button>
     </form>
 
-    <div class="result">
-      <strong>Conclusion :</strong>
-      <p>{{ conclusion }}</p>
+    <div class="box">
+      <h2>Conclusion</h2>
+      <p><strong>{{ conclusion }}</strong></p>
+
+      {% if explication %}
+        <h3>Explication :</h3>
+        <ul>
+          {% for step in explication %}
+            <li>{{ step }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
+
+    <!-- Diagramme de Venn pour cas Tous les X sont Y -->
+    {% if p1|lower.startswith:"tous les" and "sont" in p1|lower %}
+    <canvas id="venn" width="400" height="250"></canvas>
+    <script>
+      const p1 = "{{ p1|escapejs }}";
+      const p2 = "{{ p2|escapejs }}";
+
+      const x = p1.toLowerCase().split("tous les")[1].split("sont")[0].trim();
+      const y = p1.toLowerCase().split("sont")[1].trim();
+      const z = p2.toLowerCase().split("est un")[0].trim();
+
+      const canvas = document.getElementById('venn');
+      const ctx = canvas.getContext('2d');
+
+      // Ensemble Y
+      ctx.beginPath();
+      ctx.arc(200, 125, 80, 0, 2 * Math.PI);
+      ctx.fillStyle = '#ddeeff';
+      ctx.fill();
+
+      // Ensemble X (dans Y)
+      ctx.beginPath();
+      ctx.arc(230, 125, 40, 0, 2 * Math.PI);
+      ctx.fillStyle = '#88ccff';
+      ctx.fill();
+
+      ctx.fillStyle = 'black';
+      ctx.font = '16px Arial';
+      ctx.fillText(y, 160, 220);
+      ctx.fillText(x, 220, 130);
+      ctx.fillText(z.charAt(0).toUpperCase() + z.slice(1), 225, 125);
+    </script>
+    {% endif %}
   </div>
 </body>
 </html>
