@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Mini-App Connaissance - IA</title>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -18,7 +18,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    input, button {
+    textarea, button {
       width: 100%;
       padding: 0.8rem;
       margin-top: 1rem;
@@ -28,7 +28,7 @@
       height: 400px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      margin-top: 1.5rem;
+      margin-top: 2rem;
     }
     .result-box {
       margin-top: 2rem;
@@ -37,91 +37,97 @@
       border-radius: 8px;
     }
     .result-box ul {
-      list-style-type: none;
-      padding: 0;
+      list-style: none;
+      padding-left: 1rem;
     }
     .result-box ul li {
-      padding: 0.5rem;
-      background: #e0e0e0;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .warning {
+      color: darkred;
+      background: #ffe9e9;
+      padding: 0.6rem;
+      border-left: 4px solid red;
+      margin-top: 1rem;
       border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Inférence Logique - Mini-App IA</h1>
-    <p>Entrez des faits et des règles logiques pour appliquer l'inférence.</p>
-
+    <h1>Base de connaissances - Inférence IA</h1>
     <form method="POST">
-      <label><strong>Faits (séparés par des retours à la ligne) :</strong></label>
-      <textarea name="faits" rows="5" placeholder="Exemple : oiseau\nmange">{{ faits_initiaux|join:"\n" }}</textarea>
+      {% csrf_token %}
+      <label><strong>Faits (1 par ligne) :</strong></label>
+      <textarea name="faits" rows="5" placeholder="oiseau\nmange">{{ faits_initiaux|join:"\n" }}</textarea>
 
-      <label><strong>Règles (format : 'A alors B', séparées par des retours à la ligne) :</strong></label>
-      <textarea name="regles" rows="5" placeholder="Exemple : oiseau alors animal\nanimal alors vivant">{{ regles|join:"\n" }}</textarea>
+      <label><strong>Règles (format : A alors B) :</strong></label>
+      <textarea name="regles" rows="5" placeholder="oiseau alors animal\nanimal alors vivant">{{ regles|join:"\n" }}</textarea>
 
-      <button type="submit">Analyser les faits et règles</button>
+      <button type="submit">Analyser</button>
     </form>
 
+    {% if invalides %}
+      <div class="warning">
+        <strong>Règles ignorées :</strong>
+        <ul>
+          {% for r in invalides %}
+            <li>{{ r }}</li>
+          {% endfor %}
+        </ul>
+        <p>Chaque règle doit être au format : <em>fait alors conclusion</em>.</p>
+      </div>
+    {% endif %}
+
+    {% if faits_final %}
     <div class="result-box">
-      <h3><strong>Inférences :</strong></h3>
+      <h3>Faits finaux :</h3>
       <ul>
-        {% for item in trace %}
-          <li>{{ item }}</li>
+        {% for f in faits_final %}
+          <li>{{ f }}</li>
         {% endfor %}
       </ul>
-      <h3><strong>Faits finaux :</strong></h3>
+
+      <h3>Inférences appliquées :</h3>
       <ul>
-        {% for fait in faits_final %}
-          <li>{{ fait }}</li>
+        {% for t in trace %}
+          <li>{{ t }}</li>
         {% endfor %}
       </ul>
     </div>
+    {% endif %}
 
-    <!-- Affichage du graphe avec vis.js -->
+    {% if liens %}
     <div id="network"></div>
-
     <script>
-      const nodes = [
-        {% for fait in faits_initiaux %}
-          { id: "{{ forloop.counter0 }}", label: "{{ fait }}", color: 'lightblue' },
-        {% endfor %}
-        {% for fait in faits_final %}
-          { id: "{{ forloop.counter0 }}", label: "{{ fait }}", color: 'lightgreen' },
-        {% endfor %}
-      ];
+      const nodes = {};
+      const edges = [];
 
-      const edges = [
-        {% for lien in liens %}
-          { from: "{{ lien.from }}", to: "{{ lien.to }}" },
-        {% endfor %}
-      ];
+      {% for lien in liens %}
+        nodes["{{ lien.from }}"] = true;
+        nodes["{{ lien.to }}"] = true;
+        edges.push({ from: "{{ lien.from }}", to: "{{ lien.to }}" });
+      {% endfor %}
 
-      const container = document.getElementById('network');
+      const nodeList = Object.keys(nodes).map((label, i) => ({
+        id: label,
+        label: label,
+        color: '#cfe2ff'
+      }));
+
       const data = {
-        nodes: new vis.DataSet(nodes),
-        edges: new vis.DataSet(edges),
+        nodes: new vis.DataSet(nodeList),
+        edges: new vis.DataSet(edges)
       };
       const options = {
-        layout: {
-          randomSeed: 2,
-          improvedLayout: true
-        },
-        nodes: {
-          shape: 'box',
-          size: 25,
-          font: { size: 14 }
-        },
-        edges: {
-          width: 2,
-          arrows: { to: true }
-        },
-        physics: {
-          enabled: false
-        }
+        layout: { improvedLayout: true },
+        nodes: { shape: 'box', font: { size: 14 } },
+        edges: { arrows: 'to' },
+        physics: { enabled: false }
       };
-      const network = new vis.Network(container, data, options);
+      new vis.Network(document.getElementById('network'), data, options);
     </script>
+    {% endif %}
   </div>
 </body>
 </html>
