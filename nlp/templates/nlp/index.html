@@ -2,94 +2,78 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Chatbot IA (NLP)</title>
+  <title>Mini-App NLP - IA</title>
   <style>
     body {
-      background: #f3f4f6;
+      font-family: 'Segoe UI', sans-serif;
+      background: #eef2f7;
       padding: 2rem;
     }
     .container {
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background: white;
-      border-radius: 10px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     h1 {
       text-align: center;
       color: #1e88e5;
     }
-    .chat-box {
-      border: 1px solid #ddd;
-      height: 300px;
-      overflow-y: auto;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      background: #fafafa;
-    }
-    .message {
-      margin: 0.5rem 0;
-    }
-    .user { text-align: right; color: #2e7d32; }
-    .bot { text-align: left; color: #1565c0; }
-    .input-group {
-      display: flex;
-      gap: 1rem;
-    }
-    input {
-      flex: 1;
-      padding: 0.6rem;
+    textarea, select, button {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 1rem;
+      font-size: 1rem;
       border-radius: 6px;
       border: 1px solid #ccc;
     }
     button {
-      padding: 0.6rem 1.2rem;
-      background: #1e88e5;
+      background: #007bff;
       color: white;
-      border: none;
-      border-radius: 6px;
+      font-weight: bold;
       cursor: pointer;
+      border: none;
+    }
+    .result-box {
+      margin-top: 2rem;
+      background: #f9f9f9;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .result-box pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Chatbot IA (NLP)</h1>
-    <div class="chat-box" id="chatbox"></div>
-    <div class="input-group">
-      <input id="msg" placeholder="Pose une question...">
-      <button onclick="sendMessage()">Envoyer</button>
+    <h1>Analyse NLP par IA</h1>
+    <form method="POST">
+      {% csrf_token %}
+
+      <label><strong>Texte à analyser :</strong></label>
+      <textarea name="text" rows="6" placeholder="Saisis ton texte ici...">{{ text }}</textarea>
+
+      <label><strong>Tâche NLP :</strong></label>
+      <select name="task">
+        <option value="resume" {% if task == 'resume' %}selected{% endif %}>Résumé</option>
+        <option value="traduction" {% if task == 'traduction' %}selected{% endif %}>Traduction (EN → FR)</option>
+        <option value="sentiment" {% if task == 'sentiment' %}selected{% endif %}>Analyse de sentiment</option>
+        <option value="entites" {% if task == 'entites' %}selected{% endif %}>Reconnaissance d'entités nommées</option>
+      </select>
+
+      <button type="submit">Analyser</button>
+    </form>
+
+    {% if result %}
+    <div class="result-box">
+      <h3>Résultat :</h3>
+      <pre>{{ result }}</pre>
     </div>
+    {% endif %}
   </div>
-
-  <script>
-    function append(sender, text) {
-      const div = document.createElement('div');
-      div.className = 'message ' + sender;
-      div.innerText = (sender === 'user' ? 'Vous : ' : 'Bot : ') + text;
-      document.getElementById('chatbox').appendChild(div);
-      document.getElementById('chatbox').scrollTop = 9999;
-    }
-
-    function sendMessage() {
-      const input = document.getElementById('msg');
-      const text = input.value;
-      if (!text.trim()) return;
-      append('user', text);
-      input.value = '';
-
-      const form = new FormData();
-      form.append('message', text);
-
-      fetch('/nlp/chat/', {
-        method: 'POST',
-        body: form
-      })
-      .then(res => res.json())
-      .then(data => append('bot', data.reply));
-    }
-  </script>
 </body>
 </html>
