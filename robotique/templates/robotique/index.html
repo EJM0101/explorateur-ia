@@ -2,86 +2,162 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Robotique IA - Simulation</title>
+  <title>Robotique IA</title>
   <style>
     body {
-      background: #eef2f7;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
       padding: 2rem;
     }
     .container {
-      max-width: 700px;
+      max-width: 600px;
       margin: auto;
       background: white;
-      padding: 2rem;
+      padding: 1.5rem;
       border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    h1 { text-align: center; color: #1e88e5; }
-    select {
-      padding: 0.6rem;
-      margin: 0.5rem;
+    canvas {
+      border: 1px solid #ccc;
+      display: block;
+      margin: 1rem auto;
+      background: #fff;
     }
-    button {
-      padding: 0.6rem 1.2rem;
-      background: #43a047;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 1rem;
+    button, select {
+      margin: 0.5rem 0.25rem;
+      padding: 0.5rem 1rem;
     }
-    ul { background: #f9f9f9; padding: 1rem; border-radius: 8px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Simulation d’un robot IA</h1>
-    <p>Ce robot virtuel peut <strong>avancer</strong>, <strong>tourner</strong> ou <strong>ramasser</strong> des objets selon vos instructions.</p>
+    <h1>Mini-App Robotique</h1>
+    <p>Ajoutez des instructions pour contrôler le robot sur la grille.</p>
 
-    <label>Ajouter une action :</label>
-    <select id="action">
-      <option value="AVANCER">AVANCER</option>
-      <option value="TOURNER_GAUCHE">TOURNER À GAUCHE</option>
-      <option value="TOURNER_DROITE">TOURNER À DROITE</option>
-      <option value="RAMASSER">RAMASSER</option>
-    </select>
-    <button onclick="ajouter()">Ajouter</button>
+    <div>
+      <select id="instruction">
+        <option value="AVANCER">AVANCER</option>
+        <option value="GAUCHE">TOURNER GAUCHE</option>
+        <option value="DROITE">TOURNER DROITE</option>
+      </select>
+      <button onclick="addInstruction()">Ajouter</button>
+      <button onclick="runInstructions()">Exécuter</button>
+      <button onclick="reset()">Réinitialiser</button>
+    </div>
 
-    <ul id="listeActions"></ul>
-    <button onclick="executer()">Exécuter le plan</button>
-
-    <div id="resultat" style="margin-top: 1rem;"></div>
+    <canvas id="grid" width="400" height="400"></canvas>
+    <ul id="listeInstructions"></ul>
   </div>
 
   <script>
-    const actions = [];
+    const canvas = document.getElementById('grid');
+    const ctx = canvas.getContext('2d');
+    const GRID_SIZE = 8;
+    const CELL_SIZE = canvas.width / GRID_SIZE;
 
-    function ajouter() {
-      const act = document.getElementById('action').value;
-      actions.push(act);
-      const li = document.createElement('li');
-      li.textContent = act;
-      document.getElementById('listeActions').appendChild(li);
+    let robot = {
+      x: 0,
+      y: 0,
+      dir: 'right' // 'up', 'down', 'left', 'right'
+    };
+
+    const instructions = [];
+
+    function drawGrid() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // grille
+      ctx.strokeStyle = '#ddd';
+      for (let i = 0; i <= GRID_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * CELL_SIZE, 0);
+        ctx.lineTo(i * CELL_SIZE, canvas.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * CELL_SIZE);
+        ctx.lineTo(canvas.width, i * CELL_SIZE);
+        ctx.stroke();
+      }
+
+      // robot
+      ctx.fillStyle = 'orange';
+      ctx.fillRect(robot.x * CELL_SIZE + 4, robot.y * CELL_SIZE + 4, CELL_SIZE - 8, CELL_SIZE - 8);
+
+      // direction
+      ctx.fillStyle = 'black';
+      const cx = robot.x * CELL_SIZE + CELL_SIZE / 2;
+      const cy = robot.y * CELL_SIZE + CELL_SIZE / 2;
+      let dx = 0, dy = 0;
+      if (robot.dir === 'up') dy = -10;
+      if (robot.dir === 'down') dy = 10;
+      if (robot.dir === 'left') dx = -10;
+      if (robot.dir === 'right') dx = 10;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + dx, cy + dy);
+      ctx.stroke();
     }
 
-    function executer() {
-      const form = new FormData();
-      actions.forEach(a => form.append('actions[]', a));
+    function addInstruction() {
+      const val = document.getElementById('instruction').value;
+      instructions.push(val);
+      updateInstructionList();
+    }
 
-      fetch('/robotique/executer/', {
-        method: 'POST',
-        body: form
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('resultat').innerHTML = `
-          <strong>Position finale :</strong> ${data.position} <br>
-          <strong>Orientation :</strong> ${data.orientation} <br>
-          <strong>Journal :</strong>
-          <ul>${data.log.map(l => `<li>${l}</li>`).join('')}</ul>
-        `;
+    function updateInstructionList() {
+      const list = document.getElementById('listeInstructions');
+      list.innerHTML = "";
+      instructions.forEach((inst, i) => {
+        const li = document.createElement('li');
+        li.textContent = `${i + 1}. ${inst}`;
+        list.appendChild(li);
       });
     }
+
+    function runInstructions() {
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i >= instructions.length) return clearInterval(interval);
+        execute(instructions[i]);
+        drawGrid();
+        i++;
+      }, 500);
+    }
+
+    function execute(inst) {
+      if (inst === 'AVANCER') {
+        if (robot.dir === 'up' && robot.y > 0) robot.y--;
+        if (robot.dir === 'down' && robot.y < GRID_SIZE - 1) robot.y++;
+        if (robot.dir === 'left' && robot.x > 0) robot.x--;
+        if (robot.dir === 'right' && robot.x < GRID_SIZE - 1) robot.x++;
+      }
+      if (inst === 'GAUCHE') {
+        robot.dir = {
+          up: 'left',
+          left: 'down',
+          down: 'right',
+          right: 'up'
+        }[robot.dir];
+      }
+      if (inst === 'DROITE') {
+        robot.dir = {
+          up: 'right',
+          right: 'down',
+          down: 'left',
+          left: 'up'
+        }[robot.dir];
+      }
+    }
+
+    function reset() {
+      robot = { x: 0, y: 0, dir: 'right' };
+      instructions.length = 0;
+      updateInstructionList();
+      drawGrid();
+    }
+
+    drawGrid();
   </script>
 </body>
 </html>
