@@ -1,41 +1,64 @@
-import re
 from django.shortcuts import render
 
-def syllogisme(p1, p2):
-    """
-    Analyse deux phrases simples pour faire une inférence logique :
-    - P1 : Tous les X sont Y
-    - P2 : Z est un X
-    Retourne : Z est Y
-    """
+def analyser_syllogisme(p1, p2):
+    p1 = p1.strip().lower()
+    p2 = p2.strip().lower()
+
     try:
-        # Exemple : "Tous les chats sont mignons"
-        m1 = re.match(r"tous les (\w+) sont (\w+)", p1.lower())
-        m2 = re.match(r"(\w+) est un (\w+)", p2.lower())
+        # Cas 1 : "Tous les X sont Y" + "Z est un X"
+        if p1.startswith("tous les") and "sont" in p1 and "est un" in p2:
+            x = p1.split("tous les")[1].split("sont")[0].strip()
+            y = p1.split("sont")[1].strip()
+            z = p2.split("est un")[0].strip()
+            x2 = p2.split("est un")[1].strip()
+            if x == x2:
+                conclusion = f"{z.capitalize()} est {y}."
+                explication = [
+                    f"P1 : Tous les {x} sont {y}",
+                    f"P2 : {z.capitalize()} est un {x}",
+                    f"Conclusion : {z.capitalize()} est {y}"
+                ]
+                return conclusion, explication
 
-        if m1 and m2:
-            x1, y = m1.groups()
-            z, x2 = m2.groups()
+        # Cas 2 : "A est B" + "B est C"
+        if " est " in p1 and " est " in p2:
+            a, b = p1.split(" est ")
+            b2, c = p2.split(" est ")
+            if b == b2:
+                conclusion = f"{a.capitalize()} est {c}."
+                explication = [
+                    f"P1 : {a} est {b}",
+                    f"P2 : {b} est {c}",
+                    f"Conclusion : {a.capitalize()} est {c}"
+                ]
+                return conclusion, explication
 
-            if x1 == x2:
-                return f"{z.capitalize()} est {y}"
-            else:
-                return f"Les termes ne correspondent pas : '{x1}' ≠ '{x2}'. Pas d'inférence possible."
-        else:
-            return (
-                "Structure non reconnue. Veuillez utiliser des phrases comme :\n"
-                "« Tous les chats sont mignons » et « Garfield est un chat »"
-            )
-    except Exception as e:
-        return f"Syllogisme mal formulé. Erreur : {str(e)}"
+        # Cas 3 : "A implique B" + "B implique C"
+        if " implique " in p1 and " implique " in p2:
+            a, b = p1.split(" implique ")
+            b2, c = p2.split(" implique ")
+            if b == b2:
+                conclusion = f"{a.capitalize()} implique {c}."
+                explication = [
+                    f"P1 : {a} implique {b}",
+                    f"P2 : {b} implique {c}",
+                    f"Conclusion : {a.capitalize()} implique {c}"
+                ]
+                return conclusion, explication
+
+        return "Conclusion non déductible automatiquement.", []
+    
+    except Exception:
+        return "Syllogisme mal formulé.", []
 
 def index(request):
-    p1 = request.GET.get('p1', "Tous les chats sont mignons")
-    p2 = request.GET.get('p2', "Garfield est un chat")
-    conclusion = syllogisme(p1, p2)
+    p1 = request.GET.get('p1', "Tous les hommes sont mortels")
+    p2 = request.GET.get('p2', "Socrate est un homme")
+    conclusion, explication = analyser_syllogisme(p1, p2)
 
     return render(request, 'raisonnement/index.html', {
         'p1': p1,
         'p2': p2,
-        'conclusion': conclusion
+        'conclusion': conclusion,
+        'explication': explication
     })
