@@ -139,7 +139,7 @@ C D 1</pre>
     <script>
       const chemin = {{ chemin|safe }};
       const edges_input = `{{ edges|escapejs }}`;
-      const edge_lines = edges_input.split('\\n');
+      const edge_lines = edges_input.split('\n');
 
       const edges = [];
       const nodeSet = new Set();
