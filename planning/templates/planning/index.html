@@ -11,7 +11,7 @@
       padding: 2rem;
     }
     .container {
-      max-width: 850px;
+      max-width: 900px;
       margin: auto;
       background: white;
       padding: 2rem;
@@ -46,11 +46,44 @@
       padding: 1rem;
       border-radius: 8px;
     }
+    .info-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #e3f2fd;
+      border-left: 5px solid #2196f3;
+      border-radius: 8px;
+    }
+    .example-box {
+      margin-top: 2rem;
+      background: #f8f9fa;
+      padding: 1rem;
+      border-left: 5px solid #ccc;
+      border-radius: 8px;
+    }
+    .example-box pre {
+      background: #e9ecef;
+      padding: 0.5rem;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Planification de Chemin par IA</h1>
+    <h1>🧭 Planification de Chemin par IA</h1>
+
+    <div class="info-box">
+      <h3>📘 Concepts d’Intelligence Artificielle</h3>
+      <p>Cette mini-application explore la <strong>planification automatique</strong> par recherche dans un espace d'états.</p>
+      <ul>
+        <li>🔹 Un <strong>état</strong> est représenté par un nœud dans un graphe</li>
+        <li>🔹 Une <strong>action</strong> est une transition entre deux états</li>
+        <li>🔹 Le <strong>coût</strong> est un poids numérique associé à l'action</li>
+        <li>🔹 L’algorithme A* utilise une <strong>fonction heuristique</strong> pour optimiser la recherche</li>
+      </ul>
+      <p>Choisissez un algorithme et observez comment il déduit un chemin optimal d’un point A à un point B !</p>
+    </div>
+
     <form method="POST">
       {% csrf_token %}
       <label><strong>Choisir l'algorithme :</strong></label>
@@ -61,7 +94,7 @@
       </select>
 
       <label><strong>Définir les arêtes du graphe :</strong></label>
-      <textarea name="edges" rows="6" placeholder="Ex : A B 3\nB C 2\nC D 1">{{ edges }}</textarea>
+      <textarea name="edges" rows="6" placeholder="Entrez vos arêtes ici...">{{ edges }}</textarea>
 
       <label><strong>Départ :</strong></label>
       <input name="start" value="{{ start }}">
@@ -71,6 +104,16 @@
 
       <button type="submit">Calculer le chemin</button>
     </form>
+
+    <div class="example-box">
+      <h3>💡 Exemple d’entrée :</h3>
+      <strong>Arêtes :</strong>
+      <pre>A B 3
+B C 2
+C D 1</pre>
+      <strong>Départ :</strong> <code>A</code><br>
+      <strong>Arrivée :</strong> <code>D</code>
+    </div>
 
     {% if invalides %}
     <div style="margin-top:1.5rem; padding:1rem; background:#ffecec; border-left:4px solid red; border-radius:6px;">
@@ -86,7 +129,7 @@
 
     {% if chemin %}
     <div class="box">
-      <h3>Chemin trouvé :</h3>
+      <h3>✅ Chemin trouvé :</h3>
       <p>{{ chemin|join:" → " }}</p>
     </div>
     {% endif %}
@@ -96,7 +139,7 @@
     <script>
       const chemin = {{ chemin|safe }};
       const edges_input = `{{ edges|escapejs }}`;
-      const edge_lines = edges_input.split('\n');
+      const edge_lines = edges_input.split('\\n');
 
       const edges = [];
       const nodeSet = new Set();
