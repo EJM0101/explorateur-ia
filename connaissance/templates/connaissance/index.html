@@ -11,7 +11,7 @@
       padding: 2rem;
     }
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
       background: white;
       padding: 2rem;
@@ -21,7 +21,7 @@
     textarea, button {
       width: 100%;
       padding: 0.8rem;
-      margin-top: 1rem;
+      margin-top: 0.5rem;
       font-size: 1rem;
     }
     #network {
@@ -51,21 +51,63 @@
       margin-top: 1rem;
       border-radius: 5px;
     }
+    .info-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #e7f5ff;
+      border-left: 5px solid #339af0;
+      border-radius: 8px;
+    }
+    .example-box {
+      margin-top: 2rem;
+      background: #f8f9fa;
+      padding: 1rem;
+      border-left: 5px solid #ccc;
+      border-radius: 8px;
+    }
+    .example-box pre {
+      background: #e9ecef;
+      padding: 0.5rem;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Base de connaissances - Inférence IA</h1>
+    <h1>🧠 Base de connaissances - Inférence IA</h1>
+
+    <div class="info-box">
+      <h3>📘 À propos</h3>
+      <p>Cette application vous permet de simuler un système d’inférence simple basé sur des faits et des règles logiques (du type <code>si A alors B</code>).</p>
+      <ul>
+        <li>🔹 Les <strong>faits</strong> sont des éléments connus.</li>
+        <li>🔹 Les <strong>règles</strong> permettent d’inférer de nouveaux faits.</li>
+        <li>🔹 L’algorithme applique récursivement les règles sur la base de faits jusqu’à obtenir toutes les inférences possibles.</li>
+      </ul>
+    </div>
+
     <form method="POST">
       {% csrf_token %}
       <label><strong>Faits (1 par ligne) :</strong></label>
-      <textarea name="faits" rows="5" placeholder="oiseau\nmange">{{ faits_initiaux|join:"\n" }}</textarea>
+      <textarea name="faits" rows="5" placeholder="Entrez vos faits ici...">{{ faits_initiaux|join:"\n" }}</textarea>
 
       <label><strong>Règles (format : A alors B) :</strong></label>
-      <textarea name="regles" rows="5" placeholder="oiseau alors animal\nanimal alors vivant">{{ regles|join:"\n" }}</textarea>
+      <textarea name="regles" rows="5" placeholder="Entrez vos règles ici...">{{ regles|join:"\n" }}</textarea>
 
       <button type="submit">Analyser</button>
     </form>
+
+    <div class="example-box">
+      <h3>💡 Exemple à essayer :</h3>
+      <strong>Faits :</strong>
+      <pre>oiseau
+mange</pre>
+
+      <strong>Règles :</strong>
+      <pre>oiseau alors animal
+animal alors vivant</pre>
+    </div>
 
     {% if invalides %}
       <div class="warning">
@@ -80,14 +122,14 @@
 
     {% if faits_final %}
     <div class="result-box">
-      <h3>Faits finaux :</h3>
+      <h3>🧾 Faits finaux :</h3>
       <ul>
         {% for f in faits_final %}
           <li>{{ f }}</li>
         {% endfor %}
       </ul>
 
-      <h3>Inférences :</h3>
+      <h3>🔍 Inférences appliquées :</h3>
       <ul>
         {% for t in trace %}
           <li>{{ t }}</li>
